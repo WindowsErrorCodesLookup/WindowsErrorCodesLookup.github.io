@@ -1,0 +1,157 @@
+<html lang="en">
+<head>
+	<meta charset="utf8">
+	<title>Windows Error Codes Lookup</title>
+</head>
+<body>
+	<input id="search_input"><button>Search</button>
+	<div id="output"></div>
+</body>
+
+<script>
+	let loadCount = 0;
+	let needDoSearch = false;
+	let codeRange = [
+		[0, 499],
+		[500, 999],
+		[1000, 1299],
+		[1300, 1699],
+		[1700, 3999],
+		[4000, 5999],
+		[6000, 8199],
+		[8200, 8999],
+		[9000, 11999],
+		[12000, 15999],
+		[12000, 12175], // ERROR_INTERNET_
+		[12001, 12184], // ERROR_WINHTTP_
+	];
+	let microsoftURL = [
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--500-999-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--1000-1299-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--1300-1699-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--1700-3999-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--4000-5999-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--6000-8199-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--8200-8999-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--9000-11999-',
+		'https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--12000-15999-',
+		'https://learn.microsoft.com/en-us/windows/win32/wininet/wininet-errors',
+		'https://learn.microsoft.com/en-us/windows/win32/winhttp/error-messages', 
+	];
+
+	function Search() {
+		let code = parseInt(search_input.value);
+		if (search_input.value.startsWith('0x8007')) {
+			code -= 0x80070000;
+		}
+		let found = false;
+		output.innerHTML = '<h1>Search for error code:' + search_input.value + '</h1>';
+		for (let i = 0; i < codeData.length; ++i) {
+			for (let j = 0; j < codeData[i].length; ++j) {
+				if (code === codeData[i][j][2]) {
+					let p = document.createElement('p');
+					p.innerHTML = codeData[i][j][0];
+					output.appendChild(p);
+					p = document.createElement('p');
+					p.innerHTML = codeData[i][j][1];
+					output.appendChild(p);
+					for (let c of codeData[i][j][4]) {
+						let div = document.createElement('div');
+						div.innerHTML = c;
+						output.appendChild(div);
+					}
+					let ref = document.createElement('a');
+					ref.target = '_blank';
+					ref.innerText = 'Microsoft Offical Document Link';
+					ref.href = microsoftURL[i] + '#' + codeData[i][j][3];
+					output.appendChild(ref);
+					found = true;
+					document.title = codeData[i][j][0] + ':' + codeData[i][j][1] + ' - Windows Error Code';
+				}
+			}
+		}
+		if (!found) {
+			if (loadCount < codeRange.length) {
+				needDoSearch = true;
+			}
+			output.innerHTML += '<p>Error code not found</p>'
+		}
+	}
+	
+	let codeData = [];
+	for (let i = 0; i < codeRange.length; ++i) {
+		codeData.push([]);
+	}
+	function loadData(i) {
+		let xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				codeData[i] = JSON.parse(this.responseText);
+				++loadCount;
+				if (loadCount == codeRange.length) {
+					if (needDoSearch) {
+						Search();
+						needDoSearch = false;
+					}
+				}
+			}
+			
+		};
+		xhr.open("GET", "static/" + codeRange[i][0] + '-' + codeRange[i][1] + '.json');
+		xhr.send();
+	}
+	for (let i = 0; i < microsoftURL.length; ++i)
+		loadData(i);
+	search_input.onchange = Search;
+	search_input.onkeyup = Search;
+	
+
+	function getQueryParamByKey (paramName) {
+		var url = document.location.toString()
+		url = decodeURI(url)
+		var arrObj = url.split("?");
+		if (arrObj.length > 1) {
+			var arrPara = arrObj[1].split("&");
+			var arr;
+			for (var i = 0; i < arrPara.length; i++) {
+				arr = arrPara[i].split("=");
+				if (arr != null && arr[0] == paramName) {
+				return decodeURIComponent(arr[1]);
+				}
+			}
+			return "";
+		} else {
+			return "";
+		}
+	}
+	let code = getQueryParamByKey('code');
+	if (code) {
+		search_input.value = code;
+		setTimeout(function() {
+			Search()
+		}, 0);
+	}
+
+</script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BYV4SCY442"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BYV4SCY442');
+</script>
+<script>
+	var _hmt = _hmt || [];
+	(function() {
+	  var hm = document.createElement("script");
+	  hm.src = "https://hm.baidu.com/hm.js?cbcd44e30817687859c53bd19ffd4bf2";
+	  var s = document.getElementsByTagName("script")[0]; 
+	  s.parentNode.insertBefore(hm, s);
+	})();
+</script>
+	
+</html>
